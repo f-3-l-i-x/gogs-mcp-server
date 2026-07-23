@@ -18,7 +18,7 @@ docker compose up -d --build
 
 The MCP server listens on `http://localhost:${MCP_PORT}/mcp` (default `8080`). `MCP_PORT` only controls the port published on the host — the process always binds to port 8080 inside the container.
 
-The container runs as an a fixed, unprivileged user/group (see `Dockerfile`). `GOGS_MCP_UID`/`GOGS_MCP_GID` must be set in `.env` (there is no default) and are baked in at build time — rebuild (`docker compose up -d --build`) after changing them.
+The container runs as a fixed, unprivileged user/group (see [`Dockerfile`](Dockerfile)). `GOGS_MCP_UID`/`GOGS_MCP_GID` must be set in `.env` (there is no default) and are baked in at build time — rebuild (`docker compose up -d --build`) after changing them.
 
 Logs are written to `./logs/mcp-server.log` on the host (in addition to `docker compose logs`). Docker creates `./logs` automatically on first start, but as `root` — if the container fails to write to it, `chown <uid>:<gid> logs` to match `GOGS_MCP_UID`/`GOGS_MCP_GID`.
 
