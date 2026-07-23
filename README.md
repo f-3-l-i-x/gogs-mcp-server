@@ -22,7 +22,13 @@ The container runs as an a fixed, unprivileged user/group (see `Dockerfile`). Th
 
 ## Authentication against Gogs
 
-- **Preferred**: create a personal access token in Gogs under *Settings → Applications* and set `GOGS_TOKEN`.
+- **Preferred**: create a personal access token via the Gogs API (works regardless of what your web UI exposes) and set `GOGS_TOKEN`:
+  ```bash
+  curl -X POST -u YOUR_USERNAME:YOUR_PASSWORD \
+    -H "Content-Type: application/json" -d '{"name":"gogs-mcp"}' \
+    https://your-gogs-instance/api/v1/users/YOUR_USERNAME/tokens
+  ```
+  The response's `sha1` field is the token value.
 - **Fallback**: leave `GOGS_TOKEN` empty and set `GOGS_USERNAME`/`GOGS_PASSWORD`; the server then uses HTTP Basic Auth.
 
 ## Connecting an MCP client
