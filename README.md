@@ -116,6 +116,10 @@ For clients that only support spawning a local stdio process instead of HTTP, se
 | `gogs_comment_issue` | Comment on an issue |
 | `gogs_list_labels` | List repository labels |
 | `gogs_list_milestones` | List repository milestones |
+| `gogs_get_file_contents` | Read a file (as plain text) or list a directory at a path |
+| `gogs_create_or_update_file` | Create or update a file (creates a commit) |
+
+Gogs' contents API has no endpoint for deleting a single file, so there's no `delete_file` tool.
 
 ## Local development (without Docker)
 

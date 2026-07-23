@@ -8,6 +8,7 @@ import { registerUserTools } from "./tools/users.js";
 import { registerRepoTools } from "./tools/repos.js";
 import { registerIssueTools } from "./tools/issues.js";
 import { registerOrgTools } from "./tools/orgs.js";
+import { registerContentsTools } from "./tools/contents.js";
 import { log, logError } from "./logger.js";
 import { oauthEnabled, verifyBearerToken, protectedResourceMetadata, scopes } from "./oauth.js";
 
@@ -21,6 +22,7 @@ function buildServer(): McpServer {
   registerRepoTools(server);
   registerIssueTools(server);
   registerOrgTools(server);
+  registerContentsTools(server);
 
   return server;
 }
