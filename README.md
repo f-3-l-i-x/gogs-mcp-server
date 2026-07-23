@@ -70,11 +70,23 @@ These steps set up a Keycloak client so an MCP client (e.g. Claude.ai's custom c
 
 4. **Client scopes** — under the client's **"Client scopes"** tab, make sure every scope listed in this server's `OAUTH_SCOPES` (default `openid offline_access`) is assigned (as Default or Optional). `offline_access` in particular is often *not* assigned by default — Claude requests it automatically whenever the realm advertises it as supported (which Keycloak does by default), and if it isn't assigned to your specific client, Keycloak rejects the whole authorization request with `invalid_scope`.
 
-5. **Optional: restrict the token audience** — Client scopes -> add a mapper of type "Audience" targeting this client (or a dedicated audience string), then set the same value as `OAUTH_AUDIENCE` in this server's `.env` so it rejects tokens not intended for it.
+5. **User role for `offline_access`** — assigning the scope to the *client* (step 4) is not enough on its own. Keycloak also requires the signing-in *user* to hold the realm role `offline_access` (normally part of the `default-roles-<realm>` composite every new user gets automatically). If a user is missing it — e.g. because they were created before that default, or the realm's default roles were customized — the authorization code-to-token exchange fails with reason `Offline tokens not allowed for the user or client`, visible in Realm -> Events. Fix by assigning `offline_access` under Users -> (user) -> Role mapping, or by adding it back to Realm settings -> User registration -> Default roles. Alternatively, drop `offline_access` from `OAUTH_SCOPES` in `.env` entirely if you don't need long-lived refresh tokens — Claude will just re-authenticate more often.
 
-6. **Note down**: the Client ID, the Client Secret (Credentials tab), and the realm issuer URL (Realm settings -> General -> the base of the "OpenID Endpoint Configuration" link, i.e. `https://<keycloak-host>/realms/<realm>`). The issuer goes into `OAUTH_ISSUER` in this server's `.env`; the Client ID/Secret go into whatever MCP client you're connecting (this server itself never needs them — it only validates tokens, it doesn't request them).
+6. **Optional: restrict the token audience** — Client scopes -> add a mapper of type "Audience" targeting this client (or a dedicated audience string), then set the same value as `OAUTH_AUDIENCE` in this server's `.env` so it rejects tokens not intended for it.
 
-7. **Optional: Dynamic Client Registration** — if your MCP client supports registering itself automatically instead of a manually-created client, enable client registration for the realm (Realm settings -> Client registration policies, or equivalent for your Keycloak version) and skip steps 1-2 above. Note that a self-registered client won't automatically have `offline_access` (or other non-default scopes) assigned either — the same `invalid_scope` issue from step 4 can still occur.
+7. **Note down**: the Client ID, the Client Secret (Credentials tab), and the realm issuer URL (Realm settings -> General -> the base of the "OpenID Endpoint Configuration" link, i.e. `https://<keycloak-host>/realms/<realm>`). The issuer goes into `OAUTH_ISSUER` in this server's `.env`; the Client ID/Secret go into whatever MCP client you're connecting (this server itself never needs them — it only validates tokens, it doesn't request them).
+
+8. **Optional: Dynamic Client Registration** — if your MCP client supports registering itself automatically instead of a manually-created client, enable client registration for the realm (Realm settings -> Client registration policies, or equivalent for your Keycloak version) and skip steps 1-2 above. Note that a self-registered client won't automatically have `offline_access` (or other non-default scopes) assigned either — the same `invalid_scope` issue from step 4 can still occur.
+
+### Troubleshooting
+
+Symptoms observed in Claude's connector UI are generic (e.g. `oauth_error=invalid_scope`, or `error_code=mcp_token_exchange_failed` with `oauth_error=not_allowed`) — the actual reason is in Keycloak, not in this server. Check Realm -> Events (User events) for the failed attempt:
+
+| Keycloak event reason | Cause | Fix |
+|---|---|---|
+| (login succeeds, but authorization request is rejected before reaching the login screen or immediately after) | `invalid_scope`: a requested scope isn't assigned to the client | Step 4 above |
+| `CODE_TO_TOKEN_ERROR` — "Offline tokens not allowed for the user or client" | The user lacks the `offline_access` realm role | Step 5 above |
+| `CODE_TO_TOKEN_ERROR` — other/generic | Client secret mismatch, or redirect URI mismatch between the authorization and token requests | Regenerate the client secret and re-enter it in the MCP client; double check the redirect URI matches exactly |
 
 ## Connecting an MCP client
 
