@@ -3,3 +3,13 @@ dist/
 .env
 *.log
 .DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
