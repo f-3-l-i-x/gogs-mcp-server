@@ -35,7 +35,19 @@ Logs are written to `./logs/mcp-server.log` on the host (in addition to `docker 
 
 ## Securing the /mcp endpoint
 
-The server itself does not require a Gogs account to be called — anyone who can reach the port can invoke any tool using whatever `GOGS_TOKEN`/`GOGS_USERNAME`+`GOGS_PASSWORD` you configured. Set `MCP_AUTH_TOKEN` in `.env` (generate with `openssl rand -hex 32`) to require clients to send `Authorization: Bearer <token>`. This is **strongly recommended** whenever the server is reachable over a network rather than only via stdio on localhost. If left empty, the server logs a warning on startup and accepts unauthenticated requests.
+The server itself does not require a Gogs account to be called — anyone who can reach the port can invoke any tool using whatever `GOGS_TOKEN`/`GOGS_USERNAME`+`GOGS_PASSWORD` you configured. **Strongly recommended** whenever the server is reachable over a network rather than only via stdio on localhost. Two options, in order of precedence:
+
+### Option A: OAuth2 (e.g. Keycloak)
+
+Set `OAUTH_ISSUER` to your realm's issuer URL (e.g. `https://keycloak.example.com/realms/myrealm`) and `MCP_PUBLIC_URL` to this server's externally reachable base URL. The server fetches the issuer's `/.well-known/openid-configuration` at startup (crashing loudly if unreachable — a misconfigured issuer should never fail silently), then validates every request's `Authorization: Bearer <token>` as a JWT against the issuer's JWKS. Requests without a valid token get a `401` with a `WWW-Authenticate: Bearer resource_metadata="<MCP_PUBLIC_URL>/.well-known/oauth-protected-resource"` header, which spec-compliant MCP clients use to discover how to authenticate. Set `OAUTH_AUDIENCE` too if you want to also enforce the token's `aud` claim.
+
+In Keycloak, you'll need a client for this server (and typically a separate client, or Dynamic Client Registration, for whatever MCP host connects to it) — consult your Keycloak admin for realm-specific conventions (audience mappers, allowed redirect URIs, etc.).
+
+### Option B: shared secret
+
+Simpler, no OIDC provider needed. Set `MCP_AUTH_TOKEN` in `.env` (generate with `openssl rand -hex 32`) to require clients to send `Authorization: Bearer <token>`. Only used when `OAUTH_ISSUER` is empty.
+
+If neither is set, the server logs a warning on startup and accepts unauthenticated requests.
 
 ## Connecting an MCP client
 

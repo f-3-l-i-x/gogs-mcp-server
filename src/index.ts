@@ -9,6 +9,7 @@ import { registerRepoTools } from "./tools/repos.js";
 import { registerIssueTools } from "./tools/issues.js";
 import { registerOrgTools } from "./tools/orgs.js";
 import { log, logError } from "./logger.js";
+import { oauthEnabled, verifyBearerToken, protectedResourceMetadata } from "./oauth.js";
 
 function buildServer(): McpServer {
   const server = new McpServer({
@@ -33,21 +34,47 @@ if (transportMode === "stdio") {
 } else {
   const port = 8080;
   const authToken = process.env.MCP_AUTH_TOKEN;
+  const publicUrl = (process.env.MCP_PUBLIC_URL ?? `http://localhost:${port}`).replace(/\/+$/, "");
+  const resourceMetadataUrl = `${publicUrl}/.well-known/oauth-protected-resource`;
 
-  if (!authToken) {
+  if (oauthEnabled) {
+    log(`[gogs-mcp] OAuth2 bearer token validation enabled (issuer via OAUTH_ISSUER).`);
+  } else if (!authToken) {
     logError(
-      "[gogs-mcp] Warning: MCP_AUTH_TOKEN is not set. The /mcp endpoint is reachable " +
-        "by anyone who can reach this port, without any authentication."
+      "[gogs-mcp] Warning: neither OAUTH_ISSUER nor MCP_AUTH_TOKEN is set. The /mcp " +
+        "endpoint is reachable by anyone who can reach this port, without any authentication."
     );
   }
 
-  function requireAuth(req: Request, res: Response, next: NextFunction) {
+  function unauthorized(res: Response) {
+    if (oauthEnabled) {
+      res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${resourceMetadataUrl}"`);
+    }
+    res.status(401).json({
+      jsonrpc: "2.0",
+      error: { code: -32001, message: "Unauthorized" },
+      id: null,
+    });
+  }
+
+  async function requireAuth(req: Request, res: Response, next: NextFunction) {
+    const header = req.header("authorization") ?? "";
+    const bearerToken = header.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined;
+
+    if (oauthEnabled) {
+      if (bearerToken && (await verifyBearerToken(bearerToken))) {
+        next();
+        return;
+      }
+      unauthorized(res);
+      return;
+    }
+
     if (!authToken) {
       next();
       return;
     }
 
-    const header = req.header("authorization") ?? "";
     const expected = `Bearer ${authToken}`;
     const provided = Buffer.from(header);
     const wanted = Buffer.from(expected);
@@ -55,11 +82,7 @@ if (transportMode === "stdio") {
       provided.length === wanted.length && timingSafeEqual(provided, wanted);
 
     if (!authorized) {
-      res.status(401).json({
-        jsonrpc: "2.0",
-        error: { code: -32001, message: "Unauthorized" },
-        id: null,
-      });
+      unauthorized(res);
       return;
     }
 
@@ -104,6 +127,12 @@ if (transportMode === "stdio") {
   app.get("/healthz", (_req, res) => {
     res.status(200).json({ status: "ok" });
   });
+
+  if (oauthEnabled) {
+    app.get("/.well-known/oauth-protected-resource", (_req, res) => {
+      res.status(200).json(protectedResourceMetadata(`${publicUrl}/mcp`));
+    });
+  }
 
   app.listen(port, () => {
     log(`[gogs-mcp] Streamable HTTP MCP server listening on port ${port} (POST /mcp)`);
