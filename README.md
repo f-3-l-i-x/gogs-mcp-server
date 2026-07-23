@@ -20,6 +20,8 @@ The MCP server listens on `http://localhost:${MCP_PORT}/mcp` (default `8080`). `
 
 The container runs as an a fixed, unprivileged user/group (see `Dockerfile`). `GOGS_MCP_UID`/`GOGS_MCP_GID` must be set in `.env` (there is no default) and are baked in at build time — rebuild (`docker compose up -d --build`) after changing them.
 
+Logs are written to `./logs/mcp-server.log` on the host (in addition to `docker compose logs`). Make sure `./logs` is writable by `GOGS_MCP_UID`/`GOGS_MCP_GID` before starting — e.g. `mkdir -p logs && chown <uid>:<gid> logs`.
+
 ## Authentication against Gogs
 
 - **Preferred**: create a personal access token via the Gogs API (works regardless of what your web UI exposes) and set `GOGS_TOKEN`:

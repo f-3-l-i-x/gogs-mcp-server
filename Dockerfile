@@ -13,7 +13,7 @@ RUN addgroup -g "$GOGS_MCP_GID" app && adduser -D -u "$GOGS_MCP_UID" -G app -h /
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json* ./
-RUN npm install --omit=dev && chown -R app:app /app
+RUN npm install --omit=dev && mkdir -p logs && chown -R app:app /app
 COPY --from=build --chown=app:app /app/dist ./dist
 
 USER app

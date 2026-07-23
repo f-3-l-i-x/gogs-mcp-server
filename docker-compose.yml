@@ -7,5 +7,9 @@ services:
         GOGS_MCP_GID: ${GOGS_MCP_GID}
     restart: unless-stopped
     env_file: .env
+    environment:
+      - LOG_DIR=/app/logs
     ports:
       - "${MCP_PORT:-8080}:8080"
+    volumes:
+      - ./logs:/app/logs

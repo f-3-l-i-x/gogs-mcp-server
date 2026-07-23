@@ -6,6 +6,7 @@ import { registerUserTools } from "./tools/users.js";
 import { registerRepoTools } from "./tools/repos.js";
 import { registerIssueTools } from "./tools/issues.js";
 import { registerOrgTools } from "./tools/orgs.js";
+import { log, logError } from "./logger.js";
 
 function buildServer(): McpServer {
   const server = new McpServer({
@@ -45,7 +46,7 @@ if (transportMode === "stdio") {
       await server.connect(transport);
       await transport.handleRequest(req, res, req.body);
     } catch (err) {
-      console.error("[gogs-mcp] Error handling MCP request:", err);
+      logError("[gogs-mcp] Error handling MCP request:", err);
       if (!res.headersSent) {
         res.status(500).json({
           jsonrpc: "2.0",
@@ -69,6 +70,6 @@ if (transportMode === "stdio") {
   });
 
   app.listen(port, () => {
-    console.error(`[gogs-mcp] Streamable HTTP MCP server listening on port ${port} (POST /mcp)`);
+    log(`[gogs-mcp] Streamable HTTP MCP server listening on port ${port} (POST /mcp)`);
   });
 }
