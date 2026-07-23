@@ -1,4 +1,6 @@
 import express from "express";
+import type { Request, Response, NextFunction } from "express";
+import { timingSafeEqual } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -30,10 +32,44 @@ if (transportMode === "stdio") {
   await server.connect(transport);
 } else {
   const port = 8080;
+  const authToken = process.env.MCP_AUTH_TOKEN;
+
+  if (!authToken) {
+    logError(
+      "[gogs-mcp] Warning: MCP_AUTH_TOKEN is not set. The /mcp endpoint is reachable " +
+        "by anyone who can reach this port, without any authentication."
+    );
+  }
+
+  function requireAuth(req: Request, res: Response, next: NextFunction) {
+    if (!authToken) {
+      next();
+      return;
+    }
+
+    const header = req.header("authorization") ?? "";
+    const expected = `Bearer ${authToken}`;
+    const provided = Buffer.from(header);
+    const wanted = Buffer.from(expected);
+    const authorized =
+      provided.length === wanted.length && timingSafeEqual(provided, wanted);
+
+    if (!authorized) {
+      res.status(401).json({
+        jsonrpc: "2.0",
+        error: { code: -32001, message: "Unauthorized" },
+        id: null,
+      });
+      return;
+    }
+
+    next();
+  }
+
   const app = express();
   app.use(express.json());
 
-  app.post("/mcp", async (req, res) => {
+  app.post("/mcp", requireAuth, async (req, res) => {
     try {
       const server = buildServer();
       const transport = new StreamableHTTPServerTransport({
@@ -57,7 +93,7 @@ if (transportMode === "stdio") {
     }
   });
 
-  app.get("/mcp", async (_req, res) => {
+  app.get("/mcp", requireAuth, async (_req, res) => {
     res.status(405).json({
       jsonrpc: "2.0",
       error: { code: -32000, message: "Method not allowed. Use POST for stateless requests." },
