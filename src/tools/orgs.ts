@@ -4,21 +4,25 @@ import { gogsRequest } from "../gogsClient.js";
 import { textResult, safe } from "./util.js";
 
 export function registerOrgTools(server: McpServer) {
-  server.tool(
+  server.registerTool(
     "gogs_list_my_orgs",
-    "List organizations the configured Gogs user belongs to.",
-    {},
+    {
+      description: "List organizations the configured Gogs user belongs to.",
+      inputSchema: {},
+    },
     safe(async () => {
       const result = await gogsRequest("GET", "/user/orgs");
       return textResult(result);
     })
   );
 
-  server.tool(
+  server.registerTool(
     "gogs_list_org_repos",
-    "List repositories owned by an organization.",
     {
-      org: z.string().describe("Organization name"),
+      description: "List repositories owned by an organization.",
+      inputSchema: {
+        org: z.string().describe("Organization name"),
+      },
     },
     safe(async ({ org }: { org: string }) => {
       const result = await gogsRequest("GET", `/orgs/${org}/repos`);

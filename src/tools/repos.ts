@@ -4,22 +4,26 @@ import { gogsRequest } from "../gogsClient.js";
 import { textResult, safe } from "./util.js";
 
 export function registerRepoTools(server: McpServer) {
-  server.tool(
+  server.registerTool(
     "gogs_list_my_repos",
-    "List repositories owned by or accessible to the configured Gogs user.",
-    {},
+    {
+      description: "List repositories owned by or accessible to the configured Gogs user.",
+      inputSchema: {},
+    },
     safe(async () => {
       const repos = await gogsRequest("GET", "/user/repos");
       return textResult(repos);
     })
   );
 
-  server.tool(
+  server.registerTool(
     "gogs_search_repos",
-    "Search public and accessible repositories on the Gogs instance.",
     {
-      query: z.string().describe("Search query (repository name)"),
-      limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results"),
+      description: "Search public and accessible repositories on the Gogs instance.",
+      inputSchema: {
+        query: z.string().describe("Search query (repository name)"),
+        limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results"),
+      },
     },
     safe(async ({ query, limit }: { query: string; limit: number }) => {
       const result = await gogsRequest(
@@ -30,12 +34,14 @@ export function registerRepoTools(server: McpServer) {
     })
   );
 
-  server.tool(
+  server.registerTool(
     "gogs_get_repo",
-    "Get details of a specific repository.",
     {
-      owner: z.string().describe("Repository owner (user or organization)"),
-      repo: z.string().describe("Repository name"),
+      description: "Get details of a specific repository.",
+      inputSchema: {
+        owner: z.string().describe("Repository owner (user or organization)"),
+        repo: z.string().describe("Repository name"),
+      },
     },
     safe(async ({ owner, repo }: { owner: string; repo: string }) => {
       const result = await gogsRequest("GET", `/repos/${owner}/${repo}`);
@@ -43,14 +49,16 @@ export function registerRepoTools(server: McpServer) {
     })
   );
 
-  server.tool(
+  server.registerTool(
     "gogs_create_repo",
-    "Create a new repository for the configured Gogs user.",
     {
-      name: z.string().describe("Repository name"),
-      description: z.string().optional().describe("Repository description"),
-      private: z.boolean().default(false).describe("Whether the repository is private"),
-      auto_init: z.boolean().default(true).describe("Initialize the repository with a README"),
+      description: "Create a new repository for the configured Gogs user.",
+      inputSchema: {
+        name: z.string().describe("Repository name"),
+        description: z.string().optional().describe("Repository description"),
+        private: z.boolean().default(false).describe("Whether the repository is private"),
+        auto_init: z.boolean().default(true).describe("Initialize the repository with a README"),
+      },
     },
     safe(
       async (args: {
@@ -65,12 +73,14 @@ export function registerRepoTools(server: McpServer) {
     )
   );
 
-  server.tool(
+  server.registerTool(
     "gogs_delete_repo",
-    "Permanently delete a repository. This action is irreversible.",
     {
-      owner: z.string().describe("Repository owner (user or organization)"),
-      repo: z.string().describe("Repository name"),
+      description: "Permanently delete a repository. This action is irreversible.",
+      inputSchema: {
+        owner: z.string().describe("Repository owner (user or organization)"),
+        repo: z.string().describe("Repository name"),
+      },
     },
     safe(async ({ owner, repo }: { owner: string; repo: string }) => {
       await gogsRequest("DELETE", `/repos/${owner}/${repo}`);
@@ -78,12 +88,14 @@ export function registerRepoTools(server: McpServer) {
     })
   );
 
-  server.tool(
+  server.registerTool(
     "gogs_list_branches",
-    "List branches of a repository.",
     {
-      owner: z.string().describe("Repository owner (user or organization)"),
-      repo: z.string().describe("Repository name"),
+      description: "List branches of a repository.",
+      inputSchema: {
+        owner: z.string().describe("Repository owner (user or organization)"),
+        repo: z.string().describe("Repository name"),
+      },
     },
     safe(async ({ owner, repo }: { owner: string; repo: string }) => {
       const result = await gogsRequest("GET", `/repos/${owner}/${repo}/branches`);
