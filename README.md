@@ -38,7 +38,7 @@ A Gogs access token inherits the full permissions of whichever account issues it
 
 ## Securing the /mcp endpoint
 
-The server itself does not require a Gogs account to be called — anyone who can reach the port can invoke any tool using whatever `GOGS_TOKEN` you configured. **Strongly recommended** whenever the server is reachable over a network rather than only via stdio on localhost. Two options, in order of precedence:
+The server itself does not require a Gogs account to be called — anyone who can reach the port can invoke any tool using whatever `GOGS_TOKEN` you configured. Because of that, the server (when run with `MCP_TRANSPORT=http`) **refuses to start** unless one of the two options below is configured. Two options, in order of precedence:
 
 ### Option A: OAuth2 (e.g. Keycloak)
 
@@ -50,7 +50,9 @@ See [Configuring Keycloak](#configuring-keycloak) below for how to set up the re
 
 Simpler, no OIDC provider needed. Set `MCP_AUTH_TOKEN` in `.env` (generate with `openssl rand -hex 32`) to require clients to send `Authorization: Bearer <token>`. Only used when `OAUTH_ISSUER` is empty.
 
-If neither is set, the server logs a warning on startup and accepts unauthenticated requests.
+### Running without authentication anyway
+
+If neither is set, the server logs an error and exits rather than starting unauthenticated. To run it unauthenticated anyway — e.g. a deployment that's already network-isolated (no public port, internal Docker network only) — set `MCP_ALLOW_UNAUTHENTICATED=true`.
 
 ## Configuring Keycloak
 

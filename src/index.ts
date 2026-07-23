@@ -37,12 +37,24 @@ if (transportMode === "stdio") {
   const publicUrl = (process.env.MCP_PUBLIC_URL ?? `http://localhost:${port}`).replace(/\/+$/, "");
   const resourceMetadataUrl = `${publicUrl}/.well-known/oauth-protected-resource`;
 
+  const allowUnauthenticated = process.env.MCP_ALLOW_UNAUTHENTICATED === "true";
+
   if (oauthEnabled) {
     log(`[gogs-mcp] OAuth2 bearer token validation enabled (issuer via OAUTH_ISSUER).`);
   } else if (!authToken) {
+    if (!allowUnauthenticated) {
+      logError(
+        "[gogs-mcp] Refusing to start: none of OAUTH_ISSUER, MCP_AUTH_TOKEN is set, so the " +
+          "/mcp endpoint would be reachable by anyone who can reach this port, with no " +
+          "authentication, using your configured Gogs credentials. Set one of them, or set " +
+          "MCP_ALLOW_UNAUTHENTICATED=true to start anyway (e.g. for a deployment that's " +
+          "otherwise network-isolated)."
+      );
+      process.exit(1);
+    }
     logError(
-      "[gogs-mcp] Warning: neither OAUTH_ISSUER nor MCP_AUTH_TOKEN is set. The /mcp " +
-        "endpoint is reachable by anyone who can reach this port, without any authentication."
+      "[gogs-mcp] Warning: MCP_ALLOW_UNAUTHENTICATED=true - the /mcp endpoint is reachable " +
+        "by anyone who can reach this port, without any authentication."
     );
   }
 
