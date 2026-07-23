@@ -5,6 +5,8 @@ dist/
 logs/
 .DS_Store
 
+.claude/
+
 # IDEs
 .idea/
 .vscode/
