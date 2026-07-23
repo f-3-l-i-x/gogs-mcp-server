@@ -7,7 +7,9 @@ COPY src ./src
 RUN npm run build
 
 FROM node:24-alpine
-RUN addgroup -g 1005 app && adduser -D -u 1029 -G app -h /app app
+ARG GOGS_MCP_UID=1029
+ARG GOGS_MCP_GID=1005
+RUN addgroup -g "$GOGS_MCP_GID" app && adduser -D -u "$GOGS_MCP_UID" -G app -h /app app
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json* ./

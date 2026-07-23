@@ -1,6 +1,10 @@
 services:
   mcp-server:
-    build: .
+    build:
+      context: .
+      args:
+        GOGS_MCP_UID: ${GOGS_MCP_UID}
+        GOGS_MCP_GID: ${GOGS_MCP_GID}
     restart: unless-stopped
     env_file: .env
     ports:
