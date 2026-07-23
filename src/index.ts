@@ -28,7 +28,7 @@ if (transportMode === "stdio") {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 } else {
-  const port = Number(process.env.MCP_PORT ?? 8080);
+  const port = 8080;
   const app = express();
   app.use(express.json());
 

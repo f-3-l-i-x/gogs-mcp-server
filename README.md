@@ -16,9 +16,9 @@ Edit `.env` and set at least `GOGS_URL` plus either `GOGS_TOKEN` or `GOGS_USERNA
 docker compose up -d --build
 ```
 
-The MCP server listens on `http://localhost:${MCP_PORT}/mcp` (default `8080`).
+The MCP server listens on `http://localhost:${MCP_PORT}/mcp` (default `8080`). `MCP_PORT` only controls the port published on the host — the process always binds to port 8080 inside the container.
 
-The container runs as an a fixed, unprivileged user/group (see `Dockerfile`). The UID/GID (`GOGS_MCP_UID`/`GOGS_MCP_GID` in `.env`, default `1029`/`1005`) are baked in at build time — rebuild (`docker compose up -d --build`) after changing them.
+The container runs as an a fixed, unprivileged user/group (see `Dockerfile`). `GOGS_MCP_UID`/`GOGS_MCP_GID` must be set in `.env` (there is no default) and are baked in at build time — rebuild (`docker compose up -d --build`) after changing them.
 
 ## Authentication against Gogs
 
