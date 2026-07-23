@@ -1,5 +1,6 @@
 services:
   mcp-server:
+    container_name: mcp-gogs
     build:
       context: .
       args:
