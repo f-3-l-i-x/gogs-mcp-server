@@ -9,7 +9,7 @@ import { registerRepoTools } from "./tools/repos.js";
 import { registerIssueTools } from "./tools/issues.js";
 import { registerOrgTools } from "./tools/orgs.js";
 import { log, logError } from "./logger.js";
-import { oauthEnabled, verifyBearerToken, protectedResourceMetadata } from "./oauth.js";
+import { oauthEnabled, verifyBearerToken, protectedResourceMetadata, scopes } from "./oauth.js";
 
 function buildServer(): McpServer {
   const server = new McpServer({
@@ -48,7 +48,10 @@ if (transportMode === "stdio") {
 
   function unauthorized(res: Response) {
     if (oauthEnabled) {
-      res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${resourceMetadataUrl}"`);
+      res.setHeader(
+        "WWW-Authenticate",
+        `Bearer resource_metadata="${resourceMetadataUrl}", scope="${scopes.join(" ")}"`
+      );
     }
     res.status(401).json({
       jsonrpc: "2.0",

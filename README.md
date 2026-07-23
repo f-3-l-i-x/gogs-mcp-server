@@ -68,11 +68,13 @@ These steps set up a Keycloak client so an MCP client (e.g. Claude.ai's custom c
 
 3. **PKCE** — under the client's Capability config / Advanced settings, set **PKCE Method** to `S256`. The MCP spec requires PKCE with S256; without this Keycloak may accept a weaker method.
 
-4. **Optional: restrict the token audience** — Client scopes -> add a mapper of type "Audience" targeting this client (or a dedicated audience string), then set the same value as `OAUTH_AUDIENCE` in this server's `.env` so it rejects tokens not intended for it.
+4. **Client scopes** — under the client's **"Client scopes"** tab, make sure every scope listed in this server's `OAUTH_SCOPES` (default `openid offline_access`) is assigned (as Default or Optional). `offline_access` in particular is often *not* assigned by default — Claude requests it automatically whenever the realm advertises it as supported (which Keycloak does by default), and if it isn't assigned to your specific client, Keycloak rejects the whole authorization request with `invalid_scope`.
 
-5. **Note down**: the Client ID, the Client Secret (Credentials tab), and the realm issuer URL (Realm settings -> General -> the base of the "OpenID Endpoint Configuration" link, i.e. `https://<keycloak-host>/realms/<realm>`). The issuer goes into `OAUTH_ISSUER` in this server's `.env`; the Client ID/Secret go into whatever MCP client you're connecting (this server itself never needs them — it only validates tokens, it doesn't request them).
+5. **Optional: restrict the token audience** — Client scopes -> add a mapper of type "Audience" targeting this client (or a dedicated audience string), then set the same value as `OAUTH_AUDIENCE` in this server's `.env` so it rejects tokens not intended for it.
 
-6. **Optional: Dynamic Client Registration** — if your MCP client supports registering itself automatically instead of a manually-created client, enable client registration for the realm (Realm settings -> Client registration policies, or equivalent for your Keycloak version) and skip steps 1-2 above.
+6. **Note down**: the Client ID, the Client Secret (Credentials tab), and the realm issuer URL (Realm settings -> General -> the base of the "OpenID Endpoint Configuration" link, i.e. `https://<keycloak-host>/realms/<realm>`). The issuer goes into `OAUTH_ISSUER` in this server's `.env`; the Client ID/Secret go into whatever MCP client you're connecting (this server itself never needs them — it only validates tokens, it doesn't request them).
+
+7. **Optional: Dynamic Client Registration** — if your MCP client supports registering itself automatically instead of a manually-created client, enable client registration for the realm (Realm settings -> Client registration policies, or equivalent for your Keycloak version) and skip steps 1-2 above. Note that a self-registered client won't automatically have `offline_access` (or other non-default scopes) assigned either — the same `invalid_scope` issue from step 4 can still occur.
 
 ## Connecting an MCP client
 

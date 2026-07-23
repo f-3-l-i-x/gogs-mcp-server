@@ -3,6 +3,9 @@ import { logError } from "./logger.js";
 
 const issuer = process.env.OAUTH_ISSUER;
 const audience = process.env.OAUTH_AUDIENCE || undefined;
+export const scopes = (process.env.OAUTH_SCOPES ?? "openid offline_access")
+  .split(/\s+/)
+  .filter(Boolean);
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 let jwksUri: string | undefined;
@@ -44,5 +47,6 @@ export function protectedResourceMetadata(resourceUrl: string) {
   return {
     resource: resourceUrl,
     authorization_servers: [issuer],
+    scopes_supported: scopes,
   };
 }
