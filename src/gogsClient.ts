@@ -2,18 +2,13 @@ import { logError } from "./logger.js";
 
 const GOGS_URL = (process.env.GOGS_URL ?? "").replace(/\/+$/, "");
 const GOGS_TOKEN = process.env.GOGS_TOKEN;
-const GOGS_USERNAME = process.env.GOGS_USERNAME;
-const GOGS_PASSWORD = process.env.GOGS_PASSWORD;
 
 if (!GOGS_URL) {
   logError("[gogs-mcp] Warning: GOGS_URL is not set. Gogs API calls will fail.");
 }
 
-if (!GOGS_TOKEN && !(GOGS_USERNAME && GOGS_PASSWORD)) {
-  logError(
-    "[gogs-mcp] Warning: neither GOGS_TOKEN nor GOGS_USERNAME/GOGS_PASSWORD are set. " +
-      "Gogs API calls will fail authentication."
-  );
+if (!GOGS_TOKEN) {
+  logError("[gogs-mcp] Warning: GOGS_TOKEN is not set. Gogs API calls will fail authentication.");
 }
 
 export class GogsApiError extends Error {
@@ -28,10 +23,6 @@ export class GogsApiError extends Error {
 function authHeaders(): Record<string, string> {
   if (GOGS_TOKEN) {
     return { Authorization: `token ${GOGS_TOKEN}` };
-  }
-  if (GOGS_USERNAME && GOGS_PASSWORD) {
-    const basic = Buffer.from(`${GOGS_USERNAME}:${GOGS_PASSWORD}`).toString("base64");
-    return { Authorization: `Basic ${basic}` };
   }
   return {};
 }
