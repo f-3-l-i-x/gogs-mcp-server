@@ -34,6 +34,8 @@ curl -X POST -u YOUR_USERNAME:YOUR_PASSWORD \
 
 The response's `sha1` field is the token value — set it as `GOGS_TOKEN`.
 
+A Gogs access token inherits the full permissions of whichever account issues it, and every MCP tool call runs as that account with no further restriction. Use a **dedicated, low-privileged account** for this — not an admin — scoped to only the repositories/organizations this integration actually needs.
+
 ## Securing the /mcp endpoint
 
 The server itself does not require a Gogs account to be called — anyone who can reach the port can invoke any tool using whatever `GOGS_TOKEN` you configured. **Strongly recommended** whenever the server is reachable over a network rather than only via stdio on localhost. Two options, in order of precedence:
