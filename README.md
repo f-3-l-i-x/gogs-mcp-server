@@ -125,6 +125,8 @@ Gogs' contents API has no endpoint for deleting a single file, so there's no `de
 
 Gogs' contents (`gogs_create_or_update_file`) and branches (`gogs_list_branches`) endpoints assume the repository already has at least one commit/branch, and fail with a generic `500` error otherwise - this is a Gogs server-side limitation, not something this server can work around. Always create repositories with `auto_init: true` (the default for `gogs_create_repo`); if you hit this on a repository that was created without an initial commit, push one via `git` directly first.
 
+Reported upstream: [gogs/gogs#8396](https://github.com/gogs/gogs/issues/8396).
+
 ## Local development (without Docker)
 
 ```bash
