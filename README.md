@@ -121,6 +121,10 @@ For clients that only support spawning a local stdio process instead of HTTP, se
 
 Gogs' contents API has no endpoint for deleting a single file, so there's no `delete_file` tool.
 
+### Known limitation: repositories with zero commits
+
+Gogs' contents (`gogs_create_or_update_file`) and branches (`gogs_list_branches`) endpoints assume the repository already has at least one commit/branch, and fail with a generic `500` error otherwise - this is a Gogs server-side limitation, not something this server can work around. Always create repositories with `auto_init: true` (the default for `gogs_create_repo`); if you hit this on a repository that was created without an initial commit, push one via `git` directly first.
+
 ## Local development (without Docker)
 
 ```bash

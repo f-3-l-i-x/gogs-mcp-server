@@ -1,3 +1,22 @@
+import { GogsApiError } from "../gogsClient.js";
+
+const EMPTY_REPO_HINT =
+  "Hint: repositories with zero commits (e.g. created with auto_init: false) often cause " +
+  "this generic error on Gogs' contents/branches endpoints - Gogs cannot create the first " +
+  "commit or list branches via this API on such a repository. Initialize it with a README " +
+  "(auto_init: true) or push an initial commit via git first.";
+
+export async function withEmptyRepoHint<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (err instanceof GogsApiError && err.status === 500) {
+      throw new Error(`${err.message}\n\n${EMPTY_REPO_HINT}`);
+    }
+    throw err;
+  }
+}
+
 export function textResult(data: unknown) {
   return {
     content: [

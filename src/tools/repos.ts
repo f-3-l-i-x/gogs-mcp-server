@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { gogsRequest } from "../gogsClient.js";
-import { textResult, safe } from "./util.js";
+import { textResult, safe, withEmptyRepoHint } from "./util.js";
 
 export function registerRepoTools(server: McpServer) {
   server.registerTool(
@@ -57,7 +57,14 @@ export function registerRepoTools(server: McpServer) {
         name: z.string().describe("Repository name"),
         description: z.string().optional().describe("Repository description"),
         private: z.boolean().default(false).describe("Whether the repository is private"),
-        auto_init: z.boolean().default(true).describe("Initialize the repository with a README"),
+        auto_init: z
+          .boolean()
+          .default(true)
+          .describe(
+            "Initialize the repository with a README. Recommended: true - a repository " +
+              "created with false has no commits, and Gogs' contents/branches API cannot " +
+              "operate on such a repository (fails with a generic server error)."
+          ),
       },
     },
     safe(
@@ -98,7 +105,9 @@ export function registerRepoTools(server: McpServer) {
       },
     },
     safe(async ({ owner, repo }: { owner: string; repo: string }) => {
-      const result = await gogsRequest("GET", `/repos/${owner}/${repo}/branches`);
+      const result = await withEmptyRepoHint(() =>
+        gogsRequest("GET", `/repos/${owner}/${repo}/branches`)
+      );
       return textResult(result);
     })
   );

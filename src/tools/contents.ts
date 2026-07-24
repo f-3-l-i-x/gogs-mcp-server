@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { gogsRequest } from "../gogsClient.js";
-import { textResult, safe } from "./util.js";
+import { textResult, safe, withEmptyRepoHint } from "./util.js";
 
 function encodePath(path: string): string {
   return path
@@ -104,11 +104,13 @@ export function registerContentsTools(server: McpServer) {
         branch?: string;
       }) => {
         const encodedPath = encodePath(path);
-        const result = await gogsRequest("PUT", `/repos/${owner}/${repo}/contents/${encodedPath}`, {
-          message,
-          content: Buffer.from(content, "utf-8").toString("base64"),
-          ...(branch ? { branch } : {}),
-        });
+        const result = await withEmptyRepoHint(() =>
+          gogsRequest("PUT", `/repos/${owner}/${repo}/contents/${encodedPath}`, {
+            message,
+            content: Buffer.from(content, "utf-8").toString("base64"),
+            ...(branch ? { branch } : {}),
+          })
+        );
         return textResult(result);
       }
     )
