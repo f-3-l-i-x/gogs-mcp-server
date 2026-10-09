@@ -107,7 +107,9 @@ if (transportMode === "stdio") {
   }
 
   const app = express();
-  app.use(express.json());
+  // express.json() defaults to 100kb, which rejects larger file writes
+  // (gogs_create_or_update_file) with a 413 before they ever reach Gogs.
+  app.use(express.json({ limit: process.env.MCP_MAX_BODY_SIZE || "10mb" }));
 
   app.post("/mcp", requireAuth, async (req, res) => {
     try {
